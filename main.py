@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Header, HTTPException
+from datetime import datetime
+from src.bd.connect import connect
 from schemas import Medicao
 
 
@@ -22,15 +24,23 @@ def read_root():
 async def receber_medicao(
         dispositivo_id: str, 
         medicao: Medicao, 
-        token: str = Header(..., description="Token do dispositivo")
+        # token: str = Header(..., description="Token do dispositivo") 
     ):
 
-    if token != 'token_do_dispositivo':
-        raise HTTPException(status_code=403, detail='Dispositivo não autorizado')
-    
-    print(medicao)  # Futuramente armazenar no banco de dados
+    supabase = connect()
+
+    #if token != 'token_do_dispositivo':
+    #   raise HTTPException(status_code=403, detail='Dispositivo não autorizado')
+
+    print(medicao.model_dump(mode="json"))
+    response = (
+        supabase.table("test_readings")
+        .insert(medicao.model_dump(mode="json"))
+        .execute()
+    )
 
     return {
         'status': 'sucesso',
-        'id_dispositivo': dispositivo_id
+        # 'id_dispositivo': dispositivo_id,
+        'response': response
     }
